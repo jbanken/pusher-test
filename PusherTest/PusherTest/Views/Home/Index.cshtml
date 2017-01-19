@@ -1,0 +1,89 @@
+﻿<script src="https://js.pusher.com/3.2/pusher.min.js"></script>
+<script>
+    $(function () {
+
+        Pusher.logToConsole = true;
+        var pusher = new Pusher('48021ed1b96971d522e7',
+        {
+            cluster: 'eu',
+            encrypted: true
+        });
+
+        var channel1 = pusher.subscribe('messenger1-channel');
+        var channel2 = pusher.subscribe('messenger2-channel');
+
+        //listeners
+        channel1.bind('Event:Listen', function (data) {
+            var textarea = $('#messenger1-display');
+            handleMessage(textarea, data.message);
+        });
+
+        channel2.bind('Event:Listen', function (data) {
+            var textarea = $('#messenger2-display');
+            handleMessage(textarea, data.message);
+        });
+
+        //triggers
+        $("#messenger1-text").keyup(function (event) {
+            if (event.keyCode == 13) {
+                $('#button-messenger1-send').click();
+            }
+        });
+        $("#messenger2-text").keyup(function (event) {
+            if (event.keyCode == 13) {
+                $('#button-messenger2-send').click();
+            }
+        });
+        $('#button-messenger1-send').on('click', function (data) {
+            sendMessage('messenger1-channel', "ME: " + $('#messenger1-text').val());
+            sendMessage('messenger2-channel', "THEM: " + $('#messenger1-text').val());
+        });
+
+        $('#button-messenger2-send').on('click', function (data) {
+            sendMessage('messenger1-channel', "THEM: " + $('#messenger2-text').val());
+            sendMessage('messenger2-channel', "ME: " + $('#messenger2-text').val());
+        });
+
+        //custom functions
+        var handleMessage = function (textarea, message) {
+            //handle nothing in message box
+            if (textarea.html() != "") {
+                message = '\n' + message;
+            }
+
+            textarea.html(textarea.html() + message);
+        }
+
+        var sendMessage = function (channel, message) {
+            $.ajax({
+                url: '/push/send'
+                , method: 'POST'
+                , dataType: 'json'
+                , data: { channel: channel, message: message }
+            }).done(function () {
+
+            });
+        };
+
+        
+    });
+    
+
+</script>
+<div class="row">
+    <h1>Pusher Messenger Test</h1>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="messenger1-display">Messages:</label> <textarea name="Messenger1" id="messenger1-display" class="form-control"></textarea>
+            <label for="messenger1-text">Message:</label> <input type="text" id="messenger1-text" value="" class="form-control"/>
+            <button id="button-messenger1-send">Send</button>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="messenger2-display">Messages:</label> <textarea name="Messenger2" id="messenger2-display" class="form-control"></textarea>
+            <label for="messenger2-text">Message:</label> <input type="text" id="messenger2-text" value="" class="form-control"/>
+            <button id="button-messenger2-send">Send</button>
+        </div>
+    </div>
+</div>
